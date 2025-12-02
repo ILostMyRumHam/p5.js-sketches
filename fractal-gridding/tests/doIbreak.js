@@ -35,6 +35,7 @@ function test_levels1(){
     console.assert(level2.w === 2 && level2.h === 2)
     level3.w = level3.lower()
     console.assert(level3.w === 3 && level3.h === 3)
+
     console.log(format + "-> ok!")
   }catch(e){
     const new_error = SomeError.from(e)
@@ -48,20 +49,19 @@ function test_levels2(){
   try{
     let level4 = new Level(50, 20)
     console.assert(level4.w === 50 && level4.h === 20)
-    level4.to_average()
+    level4.average()
     console.assert(level4.w === 35 && level4.h === 35)
     
     let level5 = new Level(1.3, 4.1)
     console.assert(level5.w.toFixed(2) === "1.30" && level5.h.toFixed(2) === "4.10")
-    level5.to_average()
+    level5.average()
     console.assert(level5.w.toFixed(2) === "2.70" && level5.h.toFixed(2) === "2.70")
 
     console.log(format + "-> ok!")
     
   }catch(e){
     const new_error = SomeError.from(e)
-    console.log(new_error.show("test_levels2() not implemented"))
+    console.log(new_error.show("test_levels2()"))
 
   }
 }
-
