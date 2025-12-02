@@ -1,9 +1,10 @@
 // Inspired by Fractal Gridding
 // SOURCE: https://www.fractalgridding.com/ by Ecy Femi King and Dr. Rod King
 
-
 function change_dimensions(new_value_w, new_value_h) {  
   // I don't know why I didn't write a class with a constructor instead -> ?
+  // or a class called Dimensions with a static method called change_dimensions()
+  // or an interface that can be implemented for objects with fields w and h
   
   // also confusingly named since it does not edit any object, it creates a new one
   // return object with fields w and h
@@ -14,15 +15,17 @@ function change_dimensions(new_value_w, new_value_h) {
   };
   return output
   }catch(e){
-    let some_error =`change_dimensions(${new_object}, ${new_value_w}, ${new_value_h})E -> error!`
-    throw new Error(some_error, e)
+    let some_error =`change_dimensions(${new_value_w}, ${new_value_h})E -> error!`
+    throw new Error(some_error)
   }
 }
 
 // change grid size and size ratio here:
+// could probably be grouped together in a const settings = {...} or something
+// together with the Elements for sliders and colours
 const canvas = {w: 600, h: 600, }
-let dimensions = {w: 2, h: 2, }
-let outline_dimensions= {w: 1, h:2,}
+let dimensions = {w: 3, h: 3, }
+let outline_dimensions= {w: 3, h:2,}
 
 class SliderBase {
   // probably unnecessary as slider information can just be an array of 4 numbers
@@ -35,9 +38,9 @@ class SliderBase {
   }
 }
 
-// move inside setup()
-let slider = new SliderBase(0, 10, 1, 1)
-let bold = new SliderBase(0, 10, 1, 1);
+// move inside setup() on SliderBase deprecation - no reason why this has to be global
+let slider = new SliderBase(0, 6, 1, 1)
+let bold = new SliderBase(0, 6, 1, 1);
 
 let slider_background; let slider_outlines; let background_colour; let outline_colour
 function setup() {
@@ -66,27 +69,34 @@ function draw() {
   fill(background_colour.value())
   stroke(outline_colour.value());
   
-  let new_grid = change_dimensions(dimensions.w*slider_background.value(), dimensions.h*slider_background.value())
+  let new_grid = change_dimensions(
+    dimensions.w*slider_background.value(),
+    dimensions.h*slider_background.value()
+  )
   draw_grid(canvas, new_grid)
   
   strokeWeight(3)
   translate(new_canvas.w, new_canvas.h)
   fill(background_colour.value())
-  new_grid = change_dimensions(outline_dimensions.w*slider_outlines.value(), outline_dimensions.h*slider_outlines.value())
+  
+  new_grid = change_dimensions(
+    outline_dimensions.w*slider_outlines.value(),
+    outline_dimensions.h*slider_outlines.value()
+  )
   draw_grid(new_canvas, new_grid)
   translate(0, 0)
 }
 
-const lattice = (x, y) => {return x === y-1}
+const lattice = (x, y) => x === y-1;
 
 function draw_grid(canvas_size, obj_dimensions, make_lattice=false){
-  // mandatory inputs are object instances with fields w and h that are numbers
+  // mandatory inputs are object instances with fields w and h that hold numbers
   
   // no return value
-  const rect_size = {
-    w: canvas_size.w/obj_dimensions.w,
-    h: canvas_size.w/obj_dimensions.h,
-  }
+  const rect_size = change_dimensions(
+    canvas_size.w/obj_dimensions.w,
+    canvas_size.w/obj_dimensions.h,
+  )
   for(let i = 0; i < obj_dimensions.w; i++){
     for(let j = 0; j < obj_dimensions.h; j++){
       if(lattice(i, j) && make_lattice) break
