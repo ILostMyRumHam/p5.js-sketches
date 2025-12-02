@@ -176,8 +176,10 @@ class Brush {
   }
   if(mouseIsPressed){
       this.setPosFromArray([mouseX, mouseY])
-      draw_function()
+      draw_function(this)
   }
   noErase()
   }
 }
+
+
