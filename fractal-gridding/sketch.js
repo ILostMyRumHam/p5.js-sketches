@@ -1,85 +1,103 @@
-// Inspired by Fractal Gridding
-// SOURCE: https://www.fractalgridding.com/ by Ecy Femi King and Dr. Rod King
-
-function change_dimensions(new_value_w, new_value_h) {  
-  // I don't know why I didn't write a class with a constructor instead -> ?
-  // or a class called Dimensions with a static method called change_dimensions()
-  // or an interface that can be implemented for objects with fields w and h
-  
-  // also confusingly named since it does not edit any object, it creates a new one
-  // return object with fields w and h
-  try{
-  const output = {
-    w: new_value_w,
-    h: new_value_h,
-  };
-  return output
-  }catch(e){
-    let some_error =`change_dimensions(${new_value_w}, ${new_value_h})E -> error!`
-    throw new Error(some_error)
-  }
+// inspired by: https://www.fractalgridding.com/
+// todo: function documentation
+const InterfaceLevels = {
+  /* For interaction with the Level class defined below
+  */
+  lower: (x, y) => {return Math.min(x, y)},
+  sink: function(level){
+    try{
+      if(typeof(level.w) != "number" ||
+         typeof(level.h) != "number")
+      {
+        throw("both values have to be numbers")
+      }
+      level.w = InterfaceLevels.lower(level.w, level.h)
+      level.h = InterfaceLevels.lower(level.w, level.h)
+      return level
+    }catch(e){
+      let some_error = `InterfaceLevels.sink(${JSON.stringify(level)})E ->`
+      throw new Error(some_error + "\n" + e)
+    }
+   },
+  lattice: (x, y) => {return x === y-1},
+  average: (x, y) =>{return (x+y)/2}
 }
+
+class Level  {
+  constructor(some_width, some_height=some_width){
+    this.w = some_width
+    this.h = some_height
+  }
+  sink(){return InterfaceLevels.sink(this)}
+  toString(){return String(this.w) + String(this.h)}
+  lower(){return InterfaceLevels.lower(this.w, this.h)}
+  average(){return InterfaceLevels.average(this.w, this.h)}
+  to_average(){let avg =this.average(); this.w = avg; this.h = avg}
+}
+
 
 // change grid size and size ratio here:
-// could probably be grouped together in a const settings = {...} or something
-// together with the Elements for sliders and colours
-const canvas = {w: 600, h: 600, }
-let dimensions = {w: 3, h: 3, }
-let outline_dimensions= {w: 3, h:2,}
-
-class SliderBase {
-  // probably unnecessary as slider information can just be an array of 4 numbers
-  // a whole class for two sliders seems unnecessary
-  constructor(min_val=0, max_val = 1, start=0, step=1){
-    this.min_val = min_val
-    this.max_val = max_val
-    this.start = start
-    this.step = step
-  }
+const settings = {
+  canvas:  new Level(400, 400),
+  dimensions: new Level(5, 3),
+  outline_dimensions: new Level(1,1),
+  sinkAll: function(){
+    for(let i =0; i < Object.values(this).length-1; i++){
+        InterfaceLevels.sink(Object.values(this)[i])
+    }
+  },
 }
 
-// move inside setup() on SliderBase deprecation - no reason why this has to be global
-let slider = new SliderBase(0, 6, 1, 1)
-let bold = new SliderBase(0, 6, 1, 1);
-
 let slider_background; let slider_outlines; let background_colour; let outline_colour
+let to_squares = true
 function setup() {
-  // create canvas, sliders, and colour elements
+  // first some general tests
+  run_all_tests()
+  // then the canvas, sliders, and colour elements
   // no return value
+  let canvas = settings.canvas
   createCanvas(canvas.w, canvas.h);
+  
+  if(to_squares) settings.sinkAll()
   let background_clr = color(180)
-  background(background_clr)
   let outline_clr = color(60)
   let bold_outline_clr = color(10)
-  slider_background = createSlider(slider.min_val, slider.max_val, slider.start, slider.step)
+  background(background_clr)
+  slider_background = createSlider(1, 6, 1, 1)
   slider_background.size(width/3)
 
   background_colour = createColorPicker(background_clr)
   outline_colour = createColorPicker(bold_outline_clr)
   
-  slider_outlines = createSlider(bold.min_val, bold.max_val, bold.start, bold.step)
+  slider_outlines = createSlider(1, 6, 1, 1)
   slider_outlines.size(width/3)
 }
 
-let new_canvas = change_dimensions(canvas.w/2, canvas.h/2);
+let new_canvas = new Level(
+  settings.canvas.w/2, 
+  settings.canvas.h/2
+);
+
 function draw() {
   // no return value
+  let dimensions = settings.dimensions
+  let outline_dimensions = settings.outline_dimensions
   strokeWeight(1)
   background(background_colour.value())
   fill(background_colour.value())
   stroke(outline_colour.value());
   
-  let new_grid = change_dimensions(
+  let new_grid = new Level(
     dimensions.w*slider_background.value(),
     dimensions.h*slider_background.value()
   )
-  draw_grid(canvas, new_grid)
+  draw_grid(settings.canvas, new_grid)
   
   strokeWeight(3)
   translate(new_canvas.w, new_canvas.h)
   fill(background_colour.value())
   
-  new_grid = change_dimensions(
+  new_grid = new Level(
     outline_dimensions.w*slider_outlines.value(),
     outline_dimensions.h*slider_outlines.value()
   )
@@ -87,16 +105,18 @@ function draw() {
   translate(0, 0)
 }
 
-const lattice = (x, y) => x === y-1;
+
 
 function draw_grid(canvas_size, obj_dimensions, make_lattice=false){
-  // mandatory inputs are object instances with fields w and h that hold numbers
-  
+  // mandatory inputs are object instances with fields w and h that are numbers
   // no return value
-  const rect_size = change_dimensions(
+
+  const lattice = InterfaceLevels.lattice
+  const rect_size = new Level(
     canvas_size.w/obj_dimensions.w,
-    canvas_size.w/obj_dimensions.h,
+    canvas_size.w/obj_dimensions.h
   )
+
   for(let i = 0; i < obj_dimensions.w; i++){
     for(let j = 0; j < obj_dimensions.h; j++){
       if(lattice(i, j) && make_lattice) break
