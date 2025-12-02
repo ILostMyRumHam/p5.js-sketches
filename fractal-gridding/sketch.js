@@ -1,144 +1,114 @@
 // Inspired by Fractal Gridding
 // SOURCE: https://www.fractalgridding.com/ by Ecy Femi King and Dr. Rod King
 
+function keyReleased(){
+  // Left CTRL for switching from paint to erase
+    if(keyCode === 17){ 
+      new_brush.mode.swap()
+    }
+}
+
 function TO_DO(){
-  return `
+  console.log(`
   TODO:
   + [] Compatibility across different browsers
   + [] UI that suits phones as well
   + [] Documentation for screen readers
-  `
+  `)
 }
-const stairs = (x, y) => {
-  return Math.abs(x-y) === 1
-}
+let new_brush = new Brush(x = 0, y = 0, weight = 10)
 
-class Level  {
-  constructor(some_width, some_height=some_width){
-    this.w = some_width
-    this.h = some_height
-  }
-  array(){return [this.w, this.h]}
-  lower(){return Math.min(this.w, this.h)}
-  greater(){return Math.max(this.w, this.h)}
-  sink(){
-    try{
-      if(typeof(this.w) != "number" ||
-         typeof(this.h) != "number")
-      {
-        throw "both values have to be numbers"
-      }
-      let min_val = Math.min(this.w, this.h)
-      this.w = min_val
-      this.h = min_val
-    }catch(e){
-      let some_error = `Level.sink(${JSON.stringify(this)})E -> ${e}`
-      throw new Error(some_error + "\n")
-    }
-   }
-  average() {
-    let avg = (this.w+this.h)/2
-    this.w = avg
-    this.h = avg
-  }
-  toString(){
-    return `Level: (${this.w} ${this.h})`
-  }
-  static lattice(some_lowest_level, other_lowest_level) {
-    return stairs(some_lowest_level, other_lowest_level)}
-  static sinkAll(iterable_of_levels){
-    for(let i of iterable_of_levels){
-        i.sink()
-    }
-  }
-  static lowestLevel(iterable_of_levels){
-    let lowest = iterable_of_levels[0]
-    for(let i of iterable_of_levels){
-      lowest = lowest.lower() < i.lower() ?
-                lowest :
-                i
-      }
-    return lowest
-    }
-  static fromArray(array){
-    try{
-      if(array.length < 1){
-        throw "empty array"}
-      if(array.length === 1 && typeof(array[0] === "number")){
-        return new Level(array[0])
-      }
-      if(typeof(array[0]) != "number" ||
-         typeof(array[1]) != "number"){
-        throw "array element has to be of type number "
-      }
-      return new Level(array[0], array[1])
-
-    }catch(e){
-      let some_error = `Level.fromArray(${JSON.stringify(array)})E -> ${e}`
-      throw new Error(some_error + "\n")      
-    }
-  }
-  static compare(some_level, other_level){
-    return JSON.stringify(some_level.array()) === 
-           JSON.stringify(other_level.array())
-  }
-}
-
-
-// change grid size and size ratio here:
 let settings = {
-  canvas:  new Level(600, 600),
-  dimensions: new Level(2, 1),
-  outline_dimensions: new Level(1),
+  canvas:  new Level(400, 400),
+  dimensions: new Level(3,3),
 }
 
-const max_level = 6
-let slider_step = 3
+let slider_background; let slider_brush; 
+let background_colour; let outline_colour;
+const to_squares = false;
+const max_level = 2;
+const slider_step = 1;
+const outline_weight = 5
 
-const corners = {
-  // Refactor from corners to segments or planets to cover more
-  CENTRE: [settings.canvas.w/slider_step, settings.canvas.h/slider_step],
-  TOP_LEFT: [0, 0],
-  TOP_RIGHT: [settings.canvas.w-(settings.canvas.w/slider_step), 0 ],
-  BOTTOM_RIGHT: [settings.canvas.w-(settings.canvas.w/slider_step), settings.canvas.h-(settings.canvas.h/slider_step)],
-  BOTTOM_LEFT: [0, settings.canvas.h-(settings.canvas.h/slider_step)],
-}
 
-let corners_iterator = Iterator.from(Object.keys(corners))
-
-let slider_background; let slider_outlines; let background_colour; let outline_colour;
-let to_squares = false;
-let current_corner = "CENTRE";
-let corner_button;
 function setup() {
   // first some general tests
   run_all_tests()
-  console.log(TO_DO())
-
+  TO_DO()
   // then the canvas, sliders, and colour elements
   // no return value
-  let canvas = settings.canvas
-  createCanvas(canvas.w, canvas.h);
-  
   if(to_squares) Level.sinkAll(Object.values(settings))
-  let background_clr = color(180)
-  let outline_clr = color(60)
-  let bold_outline_clr = color(10)
-  background(background_clr)
-  
-  slider_step = 1
-  slider_background = createSlider(0, max_level, settings.dimensions.lower(), slider_step)
+  createCanvas(settings.canvas.getW(), settings.canvas.getH());
+  slider_background = createSlider(0, max_level, 0 , slider_step)
   slider_background.size(width/4)
+  background_colour = createColorPicker()
+  
+  outline_colour = createColorPicker()
+  
+  brush_colour = createColorPicker()
+  
+  slider_brush = createSlider(0, 100, new_brush.getWeight(), 1)
+  slider_brush.size(width/4)
+}
 
-  background_colour = createColorPicker(background_clr)
+function draw() {
+  // no return value
+  new_brush.setWeight(slider_brush.value())
+  resetMatrix()
+  strokeWeight(1)
+  const colour_space = () => {
+    strokeWeight(1)
+    fill(background_colour.value())
+    stroke(outline_colour.value());
+  }
+  colour_space()
   
-  corner_button = createButton("MOVE", current_corner)
-  corner_button.mousePressed(switchCornerButton)
+  let dimensions  = new Level(
+    settings.dimensions.getW()**slider_background.value(),
+    settings.dimensions.getH()**slider_background.value(),
+  )
   
-  outline_colour = createColorPicker(bold_outline_clr)
+  slider_brush.changed(() =>{
+    if(!mouse_within()) new_brush.setWeight(slider_brush.value())
+
+  })
+  slider_background.changed(() =>{
+    colour_space()
+    background(background_colour.value())
+    draw_grid(settings.canvas, dimensions)
+  })
+  background_colour.changed(() =>{
+    colour_space()
+    background(background_colour.value())
+    draw_grid(settings.canvas, dimensions)
+  })
   
-   slider_outlines = createSlider(0, max_level, settings.outline_dimensions.lower(), slider_step)
-  slider_outlines.size(width/4)
+  outline_colour.changed(() =>{
+    colour_space()
+    if(slider_background.value() === 0)background(background_colour.value())
+    draw_grid(settings.canvas, dimensions)
+  })
+
+  
+  fill(brush_colour.value())
+  if(mouse_within_array(settings.canvas.array())) {
+    // so far the only defined behaviour for eraser_mode are
+    // fully transparent and to background colour
+    new_brush.useBrush(
+      draw_function = new_brush_shape,
+      eraser_mode = EraserMode.to_background,
+      bg_clr = background_colour.value()
+      )
+  }
+}
+
+const new_brush_shape = () =>{
+ellipse(
+        new_brush.getX(),
+        new_brush.getY(),
+        new_brush.getWeight(),
+        new_brush.getWeight()*1.5,
+        )
 }
 
 let new_canvas = new Level(
@@ -146,63 +116,63 @@ let new_canvas = new Level(
   settings.canvas.h/slider_step,
 );
 
-function draw() {
-  // no return value
-  translate(0, 0)
-  frameRate(24)
-  let outline_dimensions = settings.outline_dimensions
-  strokeWeight(1)
-  background(background_colour.value())
-  fill(background_colour.value())
-  stroke(outline_colour.value());
-  let dimensions  = new Level(
-    settings.dimensions.w * slider_background.value(),
-    settings.dimensions.h * slider_background.value(),
-  )
-  draw_grid(settings.canvas, dimensions)
-  
-  strokeWeight(3)
-  
-  outline_dimensions = new Level(
-    settings.outline_dimensions.w * slider_outlines.value(),
-    settings.outline_dimensions.h * slider_outlines.value(),
-  )
-    
-  translation_result = new Level(
-    corners[corner_button.value()][0],
-    corners[corner_button.value()][1],
-  )
-  translate(translation_result.w, translation_result.h)
-  
-  draw_grid(new_canvas, outline_dimensions)
+const stairs = (x, y) => {
+  return Math.abs(x-y) === 1
 }
 
-function switchCornerButton(){
-  try{
-    let switched = corners_iterator.next()
-    if(switched.done === true) throw "byeee"
-    corner_button.value(switched.value)
-  }catch(e){
-    corners_iterator = Iterator.from(Object.keys(corners))
-    let switched = corners_iterator.next()
-    corner_button.value(switched.value)
-  }
+const stars = (x, y, z) => {
+    return x % z === 1 && y % z === 1 
 }
-
 
 function draw_grid(canvas_size, obj_dimensions, make_stairs=false){
   // mandatory inputs are object instances with fields w and h that are numbers
   // no return value
 
-  const rect_size = new Level(
-    canvas_size.w/obj_dimensions.w,
-    canvas_size.h/obj_dimensions.h
+  const rect_size = obj_dimensions.getW() === 0 && obj_dimensions.getH() === 0 ?
+        new Level(0) :
+        new Level(
+    canvas_size.w/obj_dimensions.getW(),
+    canvas_size.h/obj_dimensions.getH()
   )
 
-  for(let i = 0; i < obj_dimensions.w; i++){
-    for(let j = 0; j < obj_dimensions.h; j++){
-      if(stairs(i, j) && make_stairs) break
-      rect(i * rect_size.w, j*rect_size.h, rect_size.w, rect_size.h)
+  for(let i = 0; i < obj_dimensions.getW(); i++){
+    for(let j = 0; j < obj_dimensions.getH(); j++){
+      if(i % settings.dimensions.getW() === 0 && j % settings.dimensions.getH() === 0){
+        strokeWeight(outline_weight)
+          rect(
+            i * rect_size.getW(),
+            j*rect_size.getH(),
+            rect_size.getW()*settings.dimensions.getW(),
+            rect_size.getH()*settings.dimensions.getH(),
+            )
+      }
+      strokeWeight(1)
+      line(0, j*rect_size.getH(), settings.canvas.getW(), j*rect_size.getH())
+      line(i*rect_size.getW(), 0, i*rect_size.getW(), settings.canvas.getH())
+
+      if(stars(i, j, settings.dimensions.average())){
+        strokeWeight(outline_weight)
+        rect(
+            i * rect_size.getW(),
+            j*rect_size.getH(),
+            rect_size.getW(),
+            rect_size.getH()
+            )
+
+      }
+
     }
   }
+
 }
+
+function mouseWheel(event){
+  new_brush.changeWeight(
+    minimum=1,
+    maximum=100,
+    event.delta,
+    1
+  )
+  slider_brush.value(new_brush.getWeight())
+}
+
