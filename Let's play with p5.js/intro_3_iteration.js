@@ -77,7 +77,7 @@ function mouseClicked(){
   }catch(RangeError){
     // Instead of stopping the programme at the last number, we can define custom behaviour for what happens when we reach the last value of our iterator
     // If we get to the final number, we reset the iterator by transforming the numbers object into an Iterator and assigning it to the number_iterator variable
-    number_iterator = Iterator.from(Object.values(current_language))
+    number_iterator = Iterator.from(current_language)
     text("Click to restart", width/2, height/2)
   }
 }

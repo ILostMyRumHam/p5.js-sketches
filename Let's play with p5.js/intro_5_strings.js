@@ -1,5 +1,5 @@
 // () => [number].length === 3
-const muvuluugiriro_erangi = () => {
+function langi_yona() {
   /*Return an array of three pseudo-random values between 0 and 255*/
   return [
     Math.floor(Math.random()*256),
@@ -18,20 +18,20 @@ const Okuwandiika = {
 
 const Erangi = {
   /*storing arrays representing RGB colours*/
-  emu: muvuluugiriro_erangi(),
-  bbiri: muvuluugiriro_erangi(),
-  ssatu: muvuluugiriro_erangi(),
-  nnya: muvuluugiriro_erangi(),
-  ttano: muvuluugiriro_erangi(),
-  mukaaga: muvuluugiriro_erangi(),
-  musanvu: muvuluugiriro_erangi(),
-  munaana: muvuluugiriro_erangi(),
-  mwenda: muvuluugiriro_erangi(),
-  kumi: muvuluugiriro_erangi(),
+  emu: langi_yona(),
+  bbiri: langi_yona(),
+  ssatu: langi_yona(),
+  nnya: langi_yona(),
+  ttano: langi_yona(),
+  mukaaga: langi_yona(),
+  musanvu: langi_yona(),
+  munaana: langi_yona(),
+  mwenda: langi_yona(),
+  kumi: langi_yona(),
 }
 
 // (number, [number]) => [number]
-const subtract_from = (y, array) =>{
+const subtract_from = (y, array) => {
   // The map method on an array lets us define a function to call on every value of the array
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map
   let new_array = array.map(x => x-y)
@@ -56,7 +56,7 @@ const okwoleka = (ebigambo) =>{
   }
   let buwandiike = ""
   for(let i of Object.values(ebigambo)){
-    buwandiike += String(i).toLowerCase().replaceAll("e", "3")
+    buwandiike += String(i).toLowerCase().replaceAll("e", "3").replaceAll("o", "0")
     buwandiike += "\n"
   }
   return buwandiike
@@ -69,6 +69,7 @@ const to_p5_Color = (some_value) => {try{return color(some_value)}catch(ensobi){
 let new_slider;
 let topeka = Object.values(Erangi)
 
+// () => ()
 function setup() {
   describe("TODO")
   createCanvas(400, 400);
